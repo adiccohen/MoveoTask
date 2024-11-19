@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import MonacoEditor from "@monaco-editor/react";
 import axios from "axios";
+
 const CodeBlockPage = () => {
   const { id } = useParams(); // Get ID from URL
   const navigate = useNavigate();
+  const socketRef = useRef(null); // Store socket instance in a ref
 
   // Check if the ID is valid
   if (!id) {
@@ -32,6 +34,7 @@ const CodeBlockPage = () => {
       });
 
     const socket = io("http://localhost:3001"); // Initialize socket instance
+    socketRef.current = socket; // Assign to ref for global access
 
     // Join room and listen for updates
     socket.emit("join-room", { blockId: id });
@@ -67,6 +70,21 @@ const CodeBlockPage = () => {
     }
   }, [userCount, role, navigate]);
 
+  const handleCodeChange = (newCode) => {
+    setCode(newCode);
+
+    // Access socket from ref and emit code changes
+    if (socketRef.current) {
+      socketRef.current.emit("code-change", { blockId: id, newCode });
+
+      if (newCode.trim() === solution.trim()) {
+        setShowSmiley(true);
+      } else {
+        setShowSmiley(false);
+      }
+    }
+  };
+
   return (
     <div>
       <h1>Code Block #{id}</h1>
@@ -82,16 +100,7 @@ const CodeBlockPage = () => {
           height="400px"
           language="javascript"
           value={code}
-          onChange={(newCode) => {
-            setCode(newCode);
-            socket.emit("code-change", { blockId: id, newCode });
-
-            if (newCode.trim() === solution.trim()) {
-              setShowSmiley(true);
-            } else {
-              setShowSmiley(false);
-            }
-          }}
+          onChange={handleCodeChange}
           options={{
             readOnly: role === "mentor",
             theme: "vs-dark",
@@ -107,4 +116,5 @@ const CodeBlockPage = () => {
     </div>
   );
 };
+
 export default CodeBlockPage;
