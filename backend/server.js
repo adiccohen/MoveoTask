@@ -6,14 +6,27 @@ const cors = require("cors");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-      origin: "http://localhost:5173",  // Replace with your frontend URL
-      methods: ["GET", "POST"],
-    },
-  });
+  cors: {
+    origin: "http://localhost:5173", // Replace with your frontend URL
+    methods: ["GET", "POST"],
+  },
+});
 
 const sessions = {}; // Tracks users in each room
 const pool = require("./db"); // Database pool setup
+const codeBlocks = {};
+
+(async () => {
+  try {
+    const result = await pool.query("SELECT id, initial_code FROM code_blocks");
+    result.rows.forEach((row) => {
+      codeBlocks[row.id] = { code: row.initial_code }; // Use initial_code here
+    });
+    console.log("Code blocks initialized:", codeBlocks);
+  } catch (err) {
+    console.error("Error initializing code blocks:", err.message);
+  }
+})();
 
 app.use(cors());
 app.use(express.json());
@@ -33,7 +46,9 @@ app.get("/code-blocks", async (req, res) => {
 app.get("/code-block/:id", async (req, res) => {
   const blockId = req.params.id;
   try {
-    const result = await pool.query("SELECT * FROM code_blocks WHERE id = $1", [blockId]);
+    const result = await pool.query("SELECT * FROM code_blocks WHERE id = $1", [
+      blockId,
+    ]);
     if (result.rows.length > 0) {
       res.json(result.rows[0]); // Send the specific code block
     } else {
@@ -69,12 +84,13 @@ io.on("connection", (socket) => {
     io.to(`room-${blockId}`).emit("user-count", sessions[blockId].length);
   });
   socket.on("code-change", ({ blockId, newCode }) => {
-    if (codeBlocks[blockId]) {
-      codeBlocks[blockId].code = newCode; // Update the stored code
-      io.to(blockId).emit("update-code", newCode); // Broadcast the new code to all in the room
+    if (!codeBlocks[blockId]) {
+      codeBlocks[blockId] = { code: "" }; // Initialize block if it doesn't exist
     }
+
+    codeBlocks[blockId].code = newCode; // Update the code in memory
+    io.to(`room-${blockId}`).emit("update-code", newCode); // Broadcast to all users in the room
   });
-  
 
   // Handle disconnection
   socket.on("disconnect", () => {
@@ -93,4 +109,6 @@ io.on("connection", (socket) => {
 });
 
 const PORT = 3001;
-server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+server.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);
