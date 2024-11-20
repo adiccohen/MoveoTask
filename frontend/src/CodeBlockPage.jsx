@@ -27,7 +27,7 @@ const CodeBlockPage = () => {
   useEffect(() => {
     axios
 
-      .get(`moveotask-production.up.railway.app:3001/code-block/${id}`)
+      .get(`moveotask-production.up.railway.app/code-block/${id}`)
 
       .then((res) => {
         const { initial_code, solution: fetchedSolution } = res.data;
@@ -40,7 +40,7 @@ const CodeBlockPage = () => {
       });
   
 
-    const socket = io("moveotask-production.up.railway.app:3001");
+    const socket = io("moveotask-production.up.railway.app");
 
     socketRef.current = socket;
   

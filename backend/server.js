@@ -5,9 +5,22 @@ const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
+
+// Configure CORS properly for both REST API and WebSocket connections
+const allowedOrigins = ['https://moveo-task-sable.vercel.app']; // Frontend URL (replace with your Vercel URL)
+
+const corsOptions = {
+  origin: allowedOrigins,
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"],
+};
+
+// Enable CORS for both REST API and WebSocket connections
+app.use(cors(corsOptions));
+
 const io = new Server(server, {
   cors: {
-    origin: "https://moveo-task-sable.vercel.app/", // Replace with your frontend URL
+    origin: allowedOrigins,  // Same Vercel URL
     methods: ["GET", "POST"],
   },
 });
@@ -28,7 +41,6 @@ const codeBlocks = {};
   }
 })();
 
-app.use(cors());
 app.use(express.json());
 
 // Fetch all code blocks from the PostgreSQL database
