@@ -3,18 +3,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import MonacoEditor from "@monaco-editor/react";
 import axios from "axios";
+import "./CodeBlockPage.css"; // Add this line for external CSS
 
 const CodeBlockPage = () => {
-  const { id } = useParams(); // Get ID from URL
+  const { id } = useParams();
   const navigate = useNavigate();
-  const socketRef = useRef(null); // Store socket instance in a ref
+  const socketRef = useRef(null);
 
-  // Check if the ID is valid
   if (!id) {
-    return <div>Invalid code block. Please return to the <a href="/">lobby</a>.</div>;
+    return (
+      <div className="error-container">
+        Invalid code block. Please return to the <a href="/">lobby</a>.
+      </div>
+    );
   }
 
-  // State variables
   const [role, setRole] = useState("");
   const [userCount, setUserCount] = useState(0);
   const [code, setCode] = useState("");
@@ -22,62 +25,46 @@ const CodeBlockPage = () => {
   const [showSmiley, setShowSmiley] = useState(false);
 
   useEffect(() => {
-    // Fetch the code block data, including the solution
-    axios.get(`http://localhost:3001/code-block/${id}`)
+    axios
+      .get(`http://localhost:3001/code-block/${id}`)
       .then((res) => {
-        setSolution(res.data.solution); // Assuming the solution is stored in the "solution" column
+        const { initial_code, solution: fetchedSolution } = res.data;
+        setCode(initial_code || "");
+        setSolution(fetchedSolution || "");
       })
-      .catch((err) => {
-        console.error("Error fetching the code block:", err);
-        alert("Failed to load code block. Returning to the lobby...");
+      .catch(() => {
+        alert("Failed to load code block. Redirecting to the lobby...");
         navigate("/");
       });
-
-    const socket = io("http://localhost:3001"); // Initialize socket instance
-    socketRef.current = socket; // Assign to ref for global access
-
-    // Join room and listen for updates
+  
+    const socket = io("http://localhost:3001");
+    socketRef.current = socket;
+  
     socket.emit("join-room", { blockId: id });
-
-    socket.on("role", (assignedRole) => {
-      setRole(assignedRole);
-      console.log(`Assigned role: ${assignedRole}`);
+  
+    socket.on("role", setRole);
+    socket.on("user-count", setUserCount);
+    socket.on("update-code", setCode);
+  
+    socket.on("mentor-left", () => {
+      alert("The mentor has left the room. Redirecting to the lobby...");
+      navigate("/");
     });
-
-    socket.on("user-count", (count) => {
-      setUserCount(count);
-    });
-
-    socket.on("update-code", (newCode) => {
-      setCode(newCode);
-    });
-
+  
     return () => {
-      // Cleanup: disconnect and remove listeners
-      socket.off("role");
-      socket.off("user-count");
-      socket.off("update-code");
       socket.disconnect();
-      console.log("Disconnected from the server.", socket.id);
     };
   }, [id, navigate]);
+  
 
-  // Redirect students if mentor leaves
-  useEffect(() => {
-    if (role === "student" && userCount === 1) {
-      alert("Mentor has left the room. Redirecting to the lobby...");
-      navigate("/");
-    }
-  }, [userCount, role, navigate]);
+  const normalizeCode = (code) => code.replace(/\s+/g, "").trim();
 
   const handleCodeChange = (newCode) => {
     setCode(newCode);
-
-    // Access socket from ref and emit code changes
     if (socketRef.current) {
       socketRef.current.emit("code-change", { blockId: id, newCode });
 
-      if (newCode.trim() === solution.trim()) {
+      if (normalizeCode(newCode) === normalizeCode(solution)) {
         setShowSmiley(true);
       } else {
         setShowSmiley(false);
@@ -86,16 +73,13 @@ const CodeBlockPage = () => {
   };
 
   return (
-    <div>
-      <h1>Code Block #{id}</h1>
-      <p>
-        <strong>Role:</strong> {role || "Loading role..."}
-      </p>
-      <p>
-        <strong>Users in Room:</strong> {userCount}
-      </p>
-
-      <div style={{ margin: "20px 0" }}>
+    <div className="code-block-page">
+      <h1 className="code-block-title">Code Block #{id}</h1>
+      <div className="code-block-info">
+        <p><strong>Role:</strong> {role || "Loading role..."}</p>
+        <p><strong>Users in Room:</strong> {userCount}</p>
+      </div>
+      <div className="editor-container">
         <MonacoEditor
           height="400px"
           language="javascript"
@@ -107,11 +91,8 @@ const CodeBlockPage = () => {
           }}
         />
       </div>
-
       {showSmiley && (
-        <div style={{ fontSize: "100px", textAlign: "center", color: "green" }}>
-          😊
-        </div>
+        <div className="smiley-overlay">😊</div>
       )}
     </div>
   );

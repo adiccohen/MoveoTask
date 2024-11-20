@@ -1,0 +1,39 @@
+.lobby-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers content horizontally */
+    justify-content: flex-start; /* Aligns content to the top */
+    padding: 20px;
+    min-height: 100vh; /* Ensures full viewport height */
+    background-color: #f9f9f9; /* Soft background for contrast */
+  }
+  
+  .lobby-title {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .lobby-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 400px; /* Ensures list stays compact */
+  }
+  
+  .lobby-list-item {
+    padding: 15px;
+    background: #f4f4f4;
+    margin: 10px 0;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    text-align: center;
+  }
+  
+  .lobby-list-item:hover {
+    background: #ddd;
+    transform: scale(1.05); /* Slight zoom on hover for feedback */
+  }
+  
