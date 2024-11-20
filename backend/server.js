@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Replace with your frontend URL
+    origin: "https://moveo-task-sable.vercel.app/", // Replace with your frontend URL
     methods: ["GET", "POST"],
   },
 });
@@ -117,7 +117,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;  // Use the environment's port or default to 3001
 server.listen(PORT, () =>
   console.log(`Server running on http://localhost:${PORT}`)
 );
