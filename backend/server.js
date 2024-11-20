@@ -13,6 +13,7 @@ const corsOptions = {
   origin: allowedOrigins,
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"],
+  credentials: true,
 };
 
 // Enable CORS for both REST API and WebSocket connections
