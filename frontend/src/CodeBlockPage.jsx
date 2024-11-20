@@ -26,7 +26,7 @@ const CodeBlockPage = () => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:3001/code-block/${id}`)
+      .get(`moveotask-production.up.railway.app:3001/code-block/${id}`)
       .then((res) => {
         const { initial_code, solution: fetchedSolution } = res.data;
         setCode(initial_code || "");
@@ -37,7 +37,7 @@ const CodeBlockPage = () => {
         navigate("/");
       });
   
-    const socket = io("http://localhost:3001");
+    const socket = io("moveotask-production.up.railway.app:3001");
     socketRef.current = socket;
   
     socket.emit("join-room", { blockId: id });

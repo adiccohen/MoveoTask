@@ -8,7 +8,7 @@ const Lobby = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:3001/code-blocks").then((res) => {
+    axios.get("moveotask-production.up.railway.app:3001/code-blocks").then((res) => {
       setBlocks(res.data);
     });
   }, []);
