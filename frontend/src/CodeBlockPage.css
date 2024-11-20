@@ -1,0 +1,53 @@
+.code-block-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers content horizontally */
+    justify-content: flex-start; /* Aligns items to the top */
+    padding: 20px;
+    min-height: 100vh; /* Full viewport height */
+    background-color: #f9f9f9;
+    overflow: hidden; /* Prevents unintended scrollbars */
+  }
+  
+  .code-block-title {
+    font-size: 2rem;
+    text-align: center; /* Centers text */
+    color: #444;
+    margin-bottom: 20px;
+  }
+  
+  .code-block-info {
+    margin-bottom: 20px;
+    font-size: 1rem;
+    color: #666;
+    text-align: center;
+  }
+  
+  .editor-container {
+    width: 100%;
+    max-width: 800px; /* Limits editor width */
+    margin: 0 auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #222; /* Matches Monaco's dark theme */
+    padding: 10px;
+    overflow: hidden; /* Prevents content overflow */
+  }
+  
+  .smiley-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 100px;
+    color: green;
+    z-index: 10;
+    text-align: center;
+  }
+  
+  .error-container {
+    text-align: center;
+    color: red;
+    margin: 20px;
+  }
+  

@@ -83,6 +83,7 @@ io.on("connection", (socket) => {
     // Broadcast user count to the room
     io.to(`room-${blockId}`).emit("user-count", sessions[blockId].length);
   });
+
   socket.on("code-change", ({ blockId, newCode }) => {
     if (!codeBlocks[blockId]) {
       codeBlocks[blockId] = { code: "" }; // Initialize block if it doesn't exist
@@ -96,13 +97,21 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
     for (const blockId in sessions) {
-      sessions[blockId] = sessions[blockId].filter((id) => id !== socket.id);
+      const userIndex = sessions[blockId].indexOf(socket.id);
 
-      // Clean up empty room
-      if (sessions[blockId].length === 0) {
-        delete sessions[blockId];
-      } else {
-        io.to(`room-${blockId}`).emit("user-count", sessions[blockId].length);
+      if (userIndex !== -1) {
+        const wasMentor = socket.role === "mentor"; // Check if mentor is leaving
+        sessions[blockId].splice(userIndex, 1);
+
+        if (wasMentor) {
+          // Notify all users in the room to leave
+          io.to(`room-${blockId}`).emit("mentor-left");
+          delete sessions[blockId]; // Clean up the room
+        } else {
+          // Update user count if mentor is not leaving
+          io.to(`room-${blockId}`).emit("user-count", sessions[blockId].length);
+        }
+        break;
       }
     }
   });
