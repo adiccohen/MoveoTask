@@ -7,8 +7,10 @@ const app = express();
 const server = http.createServer(app);
 
 // Configure CORS properly for both REST API and WebSocket connections
-const allowedOrigins = ['https://moveo-task-sable.vercel.app']; // Frontend URL (replace with your Vercel URL)
-
+const allowedOrigins = [
+  'https://moveo-task-sable.vercel.app', 
+  'https://moveotask-production.up.railway.app'
+];
 const corsOptions = {
   origin: allowedOrigins,
   methods: ["GET", "POST"],
