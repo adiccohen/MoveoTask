@@ -1,13 +1,8 @@
-// db.js
-const { Pool } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
 
-// Get database connection details from environment variables
-const pool = new Pool({
-  user: process.env.PG_USER, // PostgreSQL username
-  host: process.env.PG_HOST, // PostgreSQL host URL
-  database: process.env.PG_DATABASE, // PostgreSQL database name
-  password: process.env.PG_PASSWORD, // PostgreSQL password
-  port: process.env.PG_PORT || 5432, // PostgreSQL port (default is 5432)
-});
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-module.exports = pool;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+module.exports = supabase;
