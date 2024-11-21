@@ -24,42 +24,50 @@ const CodeBlockPage = () => {
   const [solution, setSolution] = useState("");
   const [showSmiley, setShowSmiley] = useState(false);
 
+  // Read API and Socket URL from environment variables
+  const apiUrl = process.env.REACT_APP_API_URL;
+  const socketUrl = process.env.REACT_APP_SOCKET_URL;
+
   useEffect(() => {
     axios
-
-      .get(`https://moveotask-production.up.railway.app/code-block/${id}`)
-
+      .get(`${apiUrl}/code-block/${id}`) // Use dynamic API URL
       .then((res) => {
         const { initial_code, solution: fetchedSolution } = res.data;
         setCode(initial_code || "");
         setSolution(fetchedSolution || "");
       })
-      .catch(() => {
-        alert("Failed to load code block. Redirecting to the lobby...");
+      .catch((err) => {
+        console.error("Error fetching the code block:", err);
+        alert("Failed to load code block. Returning to the lobby...");
         navigate("/");
       });
-  
 
-    const socket = io("https://moveotask-production.up.railway.app");
-
+    const socket = io(socketUrl); // Use dynamic Socket URL
     socketRef.current = socket;
-  
+
     socket.emit("join-room", { blockId: id });
-  
-    socket.on("role", setRole);
-    socket.on("user-count", setUserCount);
-    socket.on("update-code", setCode);
-  
+
+    socket.on("role", (assignedRole) => {
+      setRole(assignedRole);
+    });
+
+    socket.on("user-count", (count) => {
+      setUserCount(count);
+    });
+
+    socket.on("update-code", (newCode) => {
+      setCode(newCode);
+    });
+
     socket.on("mentor-left", () => {
       alert("The mentor has left the room. Redirecting to the lobby...");
       navigate("/");
     });
-  
+
     return () => {
       socket.disconnect();
     };
-  }, [id, navigate]);
-  
+  }, [id, navigate, apiUrl, socketUrl]); // Add apiUrl and socketUrl to dependencies
 
   const normalizeCode = (code) => code.replace(/\s+/g, "").trim();
 
