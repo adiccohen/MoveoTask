@@ -12,7 +12,7 @@ const CodeBlockPage = () => {
   // Check if the ID is valid
   if (!id) {
     return (
-      <div>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         Invalid code block. Please return to the <a href="/">lobby</a>.
       </div>
     );
@@ -24,6 +24,8 @@ const CodeBlockPage = () => {
   const [code, setCode] = useState(""); // Updated to fetch and display initial_code
   const [solution, setSolution] = useState("");
   const [showSmiley, setShowSmiley] = useState(false);
+  const [startTime, setStartTime] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(null);
 
   useEffect(() => {
     // Fetch the code block data, including initial_code and the solution
@@ -33,6 +35,7 @@ const CodeBlockPage = () => {
         const { initial_code, solution: fetchedSolution } = res.data;
         setCode(initial_code || ""); // Set the editor's initial code
         setSolution(fetchedSolution || ""); // Set the solution
+        setStartTime(Date.now()); // Start the timer
       })
       .catch((err) => {
         console.error("Error fetching the code block:", err);
@@ -91,6 +94,7 @@ const CodeBlockPage = () => {
       // Compare normalized code
       if (normalizeCode(newCode) === normalizeCode(solution)) {
         setShowSmiley(true);
+        setElapsedTime(((Date.now() - startTime) / 1000).toFixed(2)); // Calculate elapsed time in seconds
       } else {
         setShowSmiley(false);
       }
@@ -98,7 +102,7 @@ const CodeBlockPage = () => {
   };
 
   return (
-    <div style={{ position: "relative", minHeight: "100vh" }}>
+    <div style={{ position: "relative", height: "100vh", width: "100vw" }}>
       <h1>Code Block #{id}</h1>
       <p>
         <strong>Role:</strong> {role || "Loading role..."}
@@ -107,9 +111,9 @@ const CodeBlockPage = () => {
         <strong>Users in Room:</strong> {userCount}
       </p>
 
-      <div style={{ margin: "20px 0" }}>
+      <div style={{ margin: "20px 0", height: "calc(100% - 160px)" }}>
         <MonacoEditor
-          height="400px"
+          height="100%"
           language="javascript"
           value={code} // Use the fetched initial code
           onChange={handleCodeChange}
@@ -134,6 +138,7 @@ const CodeBlockPage = () => {
           }}
         >
           😊
+          <p style={{ fontSize: "20px" }}>Time taken: {elapsedTime} seconds</p>
         </div>
       )}
     </div>
