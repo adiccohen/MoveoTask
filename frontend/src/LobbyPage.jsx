@@ -6,19 +6,11 @@ const Lobby = () => {
   const [blocks, setBlocks] = useState([]);
   const navigate = useNavigate();
 
-  const apiUrl = process.env.REACT_APP_API_URL;
-
   useEffect(() => {
-    // Use the base URL for API calls
-    axios
-      .get(`${apiUrl}/code-blocks`)
-      .then((res) => {
-        setBlocks(res.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching code blocks:", error);
-      });
-  }, [apiUrl]);
+    axios.get("http://localhost:3001/code-blocks").then((res) => {
+      setBlocks(res.data);
+    });
+  }, []);
 
   return (
     <div>
@@ -39,4 +31,3 @@ const Lobby = () => {
 };
 
 export default Lobby;
-

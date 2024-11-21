@@ -1,13 +1,11 @@
-// db.js
-const { Pool } = require('pg');
+const { Pool } = require("pg");
 
-// Get database connection details from environment variables
 const pool = new Pool({
-  user: process.env.PG_USER, // PostgreSQL username
-  host: process.env.PG_HOST, // PostgreSQL host URL
-  database: process.env.PG_DATABASE, // PostgreSQL database name
-  password: process.env.PG_PASSWORD, // PostgreSQL password
-  port: process.env.PG_PORT || 5432, // PostgreSQL port (default is 5432)
+  user: "postgres",           // Replace with your PostgreSQL username
+  host: "localhost",          // Replace with cloud host if using a service
+  database: "MoveoTaskDB", // Replace with your database name
+  password: "Mta159753!",   // Replace with your password
+  port: 5432,                  // Default PostgreSQL port
 });
 
 module.exports = pool;
