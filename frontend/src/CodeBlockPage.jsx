@@ -24,9 +24,13 @@ const CodeBlockPage = () => {
   const [solution, setSolution] = useState("");
   const [showSmiley, setShowSmiley] = useState(false);
 
+  // Read API and Socket URL from environment variables
+  const apiUrl = process.env.REACT_APP_API_URL;
+  const socketUrl = process.env.REACT_APP_SOCKET_URL;
+
   useEffect(() => {
     axios
-      .get(`http://localhost:3001/code-block/${id}`)
+      .get(`${apiUrl}/code-block/${id}`) // Use dynamic API URL
       .then((res) => {
         const { initial_code, solution: fetchedSolution } = res.data;
         setCode(initial_code || "");
@@ -38,7 +42,7 @@ const CodeBlockPage = () => {
         navigate("/");
       });
 
-    const socket = io("http://localhost:3001");
+    const socket = io(socketUrl); // Use dynamic Socket URL
     socketRef.current = socket;
 
     socket.emit("join-room", { blockId: id });
@@ -63,7 +67,7 @@ const CodeBlockPage = () => {
     return () => {
       socket.disconnect();
     };
-  }, [id, navigate]);
+  }, [id, navigate, apiUrl, socketUrl]); // Add apiUrl and socketUrl to dependencies
 
   const normalizeCode = (code) => code.replace(/\s+/g, "").trim();
 
