@@ -1,27 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./Lobby.css"; // Add this line for external CSS
 
 const Lobby = () => {
   const [blocks, setBlocks] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("https://moveotask-production.up.railway.app/code-blocks").then((res) => {
+    axios.get("http://localhost:3001/code-blocks").then((res) => {
       setBlocks(res.data);
     });
   }, []);
 
   return (
-    <div className="lobby-container">
-      <h1 className="lobby-title">Choose a Code Block</h1>
-      <ul className="lobby-list">
+    <div>
+      <h1>Choose a Code Block</h1>
+      <ul>
         {blocks.map((block) => (
           <li
             key={block.id}
-            className="lobby-list-item"
-            onClick={() => navigate(`/code-block/${block.id}`)}
+            onClick={() => navigate(`/code-block/${block.id}`)} // Ensure block.id is not null
+            style={{ cursor: "pointer", padding: "10px", background: "#ddd", margin: "5px" }}
           >
             {block.title}
           </li>
@@ -32,3 +31,4 @@ const Lobby = () => {
 };
 
 export default Lobby;
+

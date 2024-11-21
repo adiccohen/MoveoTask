@@ -26,40 +26,44 @@ const CodeBlockPage = () => {
 
   useEffect(() => {
     axios
-
-      .get(`https://moveotask-production.up.railway.app/code-block/${id}`)
-
+      .get(`http://localhost:3001/code-block/${id}`)
       .then((res) => {
         const { initial_code, solution: fetchedSolution } = res.data;
         setCode(initial_code || "");
         setSolution(fetchedSolution || "");
       })
-      .catch(() => {
-        alert("Failed to load code block. Redirecting to the lobby...");
+      .catch((err) => {
+        console.error("Error fetching the code block:", err);
+        alert("Failed to load code block. Returning to the lobby...");
         navigate("/");
       });
-  
 
-    const socket = io("https://moveotask-production.up.railway.app");
-
+    const socket = io("http://localhost:3001");
     socketRef.current = socket;
-  
+
     socket.emit("join-room", { blockId: id });
-  
-    socket.on("role", setRole);
-    socket.on("user-count", setUserCount);
-    socket.on("update-code", setCode);
-  
+
+    socket.on("role", (assignedRole) => {
+      setRole(assignedRole);
+    });
+
+    socket.on("user-count", (count) => {
+      setUserCount(count);
+    });
+
+    socket.on("update-code", (newCode) => {
+      setCode(newCode);
+    });
+
     socket.on("mentor-left", () => {
       alert("The mentor has left the room. Redirecting to the lobby...");
       navigate("/");
     });
-  
+
     return () => {
       socket.disconnect();
     };
   }, [id, navigate]);
-  
 
   const normalizeCode = (code) => code.replace(/\s+/g, "").trim();
 
