@@ -30,12 +30,11 @@ const CodeBlockPage = () => {
   useEffect(() => {
     // Fetch the code block data, including initial_code and the solution
     axios
-      .get(`http://localhost:3001/code-block/${id}`)
+      .get(`https://moveotask-production.up.railway.app/${id}`)
       .then((res) => {
         const { initial_code, solution: fetchedSolution } = res.data;
         setCode(initial_code || ""); // Set the editor's initial code
         setSolution(fetchedSolution || ""); // Set the solution
-        setStartTime(Date.now()); // Start the timer
       })
       .catch((err) => {
         console.error("Error fetching the code block:", err);
@@ -43,7 +42,7 @@ const CodeBlockPage = () => {
         navigate("/");
       });
 
-    const socket = io("http://localhost:3001"); // Initialize socket instance
+    const socket = io("https://moveotask-production.up.railway.app"); // Initialize socket instance
     socketRef.current = socket; // Assign to ref for global access
 
     // Join room and listen for updates
@@ -52,6 +51,9 @@ const CodeBlockPage = () => {
     socket.on("role", (assignedRole) => {
       setRole(assignedRole);
       console.log(`Assigned role: ${assignedRole}`);
+      if (assignedRole === "student") {
+        setStartTime(Date.now()); // Start the timer only for students
+      }
     });
 
     socket.on("user-count", (count) => {
@@ -94,7 +96,9 @@ const CodeBlockPage = () => {
       // Compare normalized code
       if (normalizeCode(newCode) === normalizeCode(solution)) {
         setShowSmiley(true);
-        setElapsedTime(((Date.now() - startTime) / 1000).toFixed(2)); // Calculate elapsed time in seconds
+        if (role === "student") {
+          setElapsedTime(((Date.now() - startTime) / 1000).toFixed(2)); // Calculate elapsed time in seconds
+        }
       } else {
         setShowSmiley(false);
       }
@@ -138,7 +142,9 @@ const CodeBlockPage = () => {
           }}
         >
           😊
-          <p style={{ fontSize: "20px" }}>Time taken: {elapsedTime} seconds</p>
+          {role === "student" && (
+            <p style={{ fontSize: "20px" }}>Time taken: {elapsedTime} seconds</p>
+          )}
         </div>
       )}
     </div>
