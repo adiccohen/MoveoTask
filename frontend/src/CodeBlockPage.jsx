@@ -30,17 +30,17 @@ const CodeBlockPage = () => {
   useEffect(() => {
     // Fetch the code block data, including initial_code and the solution
     axios
-      .get(`https://moveotask-production.up.railway.app/${id}`)
-      .then((res) => {
-        const { initial_code, solution: fetchedSolution } = res.data;
-        setCode(initial_code || ""); // Set the editor's initial code
-        setSolution(fetchedSolution || ""); // Set the solution
-      })
-      .catch((err) => {
-        console.error("Error fetching the code block:", err);
-        alert("Failed to load code block. Returning to the lobby...");
-        navigate("/");
-      });
+    .get(`https://moveotask-production.up.railway.app/code-block/${id}`) // Correct endpoint
+    .then((res) => {
+      const { initial_code, solution: fetchedSolution } = res.data;
+      setCode(initial_code || ""); 
+      setSolution(fetchedSolution || "");
+    })
+    .catch((err) => {
+      console.error("Error fetching the code block:", err);
+      alert("Failed to load code block. Returning to the lobby...");
+      navigate("/");
+    });
 
     const socket = io("https://moveotask-production.up.railway.app"); // Initialize socket instance
     socketRef.current = socket; // Assign to ref for global access
