@@ -2,20 +2,31 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+const pool = require("./db"); // Ensure this file correctly initializes your database connection
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://moveofront.vercel.app/", // Replace with your frontend URL
+    origin: "https://moveofront.vercel.app", // Your frontend URL
     methods: ["GET", "POST"],
+    credentials: true, // Optional: For cookies/auth headers
   },
 });
 
-const sessions = {}; // Tracks users in each room
-const pool = require("./db"); // Database pool setup
+// Store sessions and code blocks in memory
+const sessions = {};
 const codeBlocks = {};
 
+// Middleware
+app.use(cors({ 
+  origin: "https://moveofront.vercel.app", // Allow frontend origin
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
+app.use(express.json());
+
+// Initialize code blocks from database
 (async () => {
   try {
     const result = await pool.query("SELECT id, initial_code FROM code_blocks");
@@ -28,21 +39,17 @@ const codeBlocks = {};
   }
 })();
 
-app.use(cors());
-app.use(express.json());
-
-// Fetch all code blocks from the PostgreSQL database
+// API Routes
 app.get("/code-blocks", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM code_blocks");
-    res.json(result.rows); // Send the code blocks from the database
+    res.json(result.rows); // Send all code blocks
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");
   }
 });
 
-// Fetch a specific code block from the PostgreSQL database
 app.get("/code-block/:id", async (req, res) => {
   const blockId = req.params.id;
   try {
@@ -50,7 +57,7 @@ app.get("/code-block/:id", async (req, res) => {
       blockId,
     ]);
     if (result.rows.length > 0) {
-      res.json(result.rows[0]); // Send the specific code block
+      res.json(result.rows[0]); // Send specific code block
     } else {
       res.status(404).send("Code block not found");
     }
@@ -60,45 +67,37 @@ app.get("/code-block/:id", async (req, res) => {
   }
 });
 
-// WebSocket logic
+// WebSocket Logic
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
   socket.on("join-room", ({ blockId }) => {
-    // Initialize room if it doesn't exist
     if (!sessions[blockId]) {
       sessions[blockId] = [];
     }
 
-    // Assign role
     socket.role = sessions[blockId].length === 0 ? "mentor" : "student";
-
     sessions[blockId].push(socket.id);
     socket.join(`room-${blockId}`);
 
-    // Send role to the client
     socket.emit("role", socket.role);
-    console.log(`Assigned role: ${socket.role} to socket ${socket.id}`);
-
-    // Broadcast user count to the room
     io.to(`room-${blockId}`).emit("user-count", sessions[blockId].length);
   });
+
   socket.on("code-change", ({ blockId, newCode }) => {
     if (!codeBlocks[blockId]) {
-      codeBlocks[blockId] = { code: "" }; // Initialize block if it doesn't exist
+      codeBlocks[blockId] = { code: "" };
     }
 
-    codeBlocks[blockId].code = newCode; // Update the code in memory
-    io.to(`room-${blockId}`).emit("update-code", newCode); // Broadcast to all users in the room
+    codeBlocks[blockId].code = newCode;
+    io.to(`room-${blockId}`).emit("update-code", newCode);
   });
 
-  // Handle disconnection
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
     for (const blockId in sessions) {
       sessions[blockId] = sessions[blockId].filter((id) => id !== socket.id);
 
-      // Clean up empty room
       if (sessions[blockId].length === 0) {
         delete sessions[blockId];
       } else {
@@ -108,7 +107,8 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3001; // Use dynamic port or default to 3001
+// Start Server
+const PORT = process.env.PORT || 3001; // Use Railway's dynamic port or default to 3001
 server.listen(PORT, () =>
-  console.log(`Server running on port ${PORT}`)
+  console.log(`Server running on http://localhost:${PORT}`)
 );
