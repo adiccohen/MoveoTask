@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Replace with your frontend URL
+    origin: "https://moveofront.vercel.app/", // Replace with your frontend URL
     methods: ["GET", "POST"],
   },
 });
@@ -83,7 +83,6 @@ io.on("connection", (socket) => {
     // Broadcast user count to the room
     io.to(`room-${blockId}`).emit("user-count", sessions[blockId].length);
   });
-
   socket.on("code-change", ({ blockId, newCode }) => {
     if (!codeBlocks[blockId]) {
       codeBlocks[blockId] = { code: "" }; // Initialize block if it doesn't exist
@@ -97,27 +96,19 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
     for (const blockId in sessions) {
-      const userIndex = sessions[blockId].indexOf(socket.id);
+      sessions[blockId] = sessions[blockId].filter((id) => id !== socket.id);
 
-      if (userIndex !== -1) {
-        const wasMentor = socket.role === "mentor"; // Check if mentor is leaving
-        sessions[blockId].splice(userIndex, 1);
-
-        if (wasMentor) {
-          // Notify all users in the room to leave
-          io.to(`room-${blockId}`).emit("mentor-left");
-          delete sessions[blockId]; // Clean up the room
-        } else {
-          // Update user count if mentor is not leaving
-          io.to(`room-${blockId}`).emit("user-count", sessions[blockId].length);
-        }
-        break;
+      // Clean up empty room
+      if (sessions[blockId].length === 0) {
+        delete sessions[blockId];
+      } else {
+        io.to(`room-${blockId}`).emit("user-count", sessions[blockId].length);
       }
     }
   });
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001; // Use dynamic port or default to 3001
 server.listen(PORT, () =>
-  console.log(`Server running on http://localhost:${PORT}`)
+  console.log(`Server running on port ${PORT}`)
 );
