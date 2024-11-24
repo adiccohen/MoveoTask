@@ -1,11 +1,11 @@
 const { Pool } = require("pg");
-
+//conecting to mu postgresql database in the railway server
 const pool = new Pool({
-  user: "postgres",           // Replace with your PostgreSQL username
-  host: "autorack.proxy.rlwy.net",          // Replace with cloud host if using a service
-  database: "railway", // Replace with your database name
-  password: "DEIxBjZAAWMqQySAWyZKSaSbudoShNuY",   // Replace with your password
-  port: 38532,                  // Default PostgreSQL port
+  user: "postgres",           
+  host: "autorack.proxy.rlwy.net",         
+  database: "railway", 
+  password: "DEIxBjZAAWMqQySAWyZKSaSbudoShNuY",   
+  port: 38532,                  
 });
 
 module.exports = pool;

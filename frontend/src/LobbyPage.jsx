@@ -4,10 +4,11 @@ import axios from "axios";
 import "./Lobby.css";
 
 const Lobby = () => {
-  const [blocks, setBlocks] = useState([]);
-  const navigate = useNavigate();
+  const [blocks, setBlocks] = useState([]); // State to store the list of code blocks
+  const navigate = useNavigate(); // Hook to navigate programmatically
 
   useEffect(() => {
+    // Fetch code blocks from the server when the component mounts
     axios.get("http://localhost:3001/code-blocks").then((res) => {
       setBlocks(res.data);
     });

@@ -5,12 +5,12 @@ import MonacoEditor from "@monaco-editor/react";
 import axios from "axios";
 
 const CodeBlockPage = () => {
-  const { id } = useParams(); // Get ID from URL
+  const { id } = useParams(); // Get the code block ID from the URL parameters
   const navigate = useNavigate();
-  const socketRef = useRef(null); // Store socket instance in a ref
+  const socketRef = useRef(null); // Reference to the socket connection
 
-  // Check if the ID is valid
   if (!id) {
+    // If no ID is provided, show an error message and a link to return to the lobby
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         Invalid code block. Please return to the <a href="/">lobby</a>.
@@ -18,24 +18,23 @@ const CodeBlockPage = () => {
     );
   }
 
-  // State variables
   const [role, setRole] = useState("");
   const [userCount, setUserCount] = useState(0);
-  const [code, setCode] = useState(""); // Updated to fetch and display initial_code
+  const [code, setCode] = useState(""); 
   const [solution, setSolution] = useState("");
   const [showSmiley, setShowSmiley] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(null);
 
   useEffect(() => {
-    // Fetch the code block data, including initial_code and the solution
+    // Fetch the initial code block data from the server
     axios
       .get(`http://localhost:3001/code-block/${id}`)
       .then((res) => {
         const { initial_code, solution: fetchedSolution } = res.data;
-        setCode(initial_code || ""); // Set the editor's initial code
-        setSolution(fetchedSolution || ""); // Set the solution
-        setStartTime(Date.now()); // Start the timer
+        setCode(initial_code || ""); 
+        setSolution(fetchedSolution || ""); 
+        setStartTime(Date.now()); // Set the start time for the coding session
       })
       .catch((err) => {
         console.error("Error fetching the code block:", err);
@@ -43,55 +42,58 @@ const CodeBlockPage = () => {
         navigate("/");
       });
 
-    const socket = io("http://localhost:3001"); // Initialize socket instance
-    socketRef.current = socket; // Assign to ref for global access
+    // Establish a socket connection to the server
+    const socket = io("http://localhost:3001"); 
+    socketRef.current = socket;
 
-    // Join room and listen for updates
+    // Join the specific code block room
     socket.emit("join-room", { blockId: id });
 
+    // Listen for role assignment from the server
     socket.on("role", (assignedRole) => {
       setRole(assignedRole);
-      console.log(`Assigned role: ${assignedRole}`);
     });
 
+    // Listen for updates on the number of users in the room
     socket.on("user-count", (count) => {
       setUserCount(count);
     });
 
+    // Listen for code updates from other users
     socket.on("update-code", (newCode) => {
       setCode(newCode);
     });
 
-    // Listen for mentor leaving the room
+    // Handle the event when the mentor leaves the room
     socket.on("mentor-left", () => {
       alert("The mentor has left the room. Redirecting to the lobby...");
       navigate("/");
     });
 
     return () => {
-      // Cleanup: disconnect and remove listeners
+      // Clean up socket event listeners and disconnect on component unmount
       socket.off("role");
       socket.off("user-count");
       socket.off("update-code");
       socket.off("mentor-left");
       socket.disconnect();
-      console.log("Disconnected from the server.", socket.id);
     };
   }, [id, navigate]);
 
-  // Normalize code for consistent comparison
+  // Normalize code by removing whitespace and trimming
   const normalizeCode = (code) => {
-    return code.replace(/\s+/g, "").trim(); // Remove extra whitespace
+    return code.replace(/\s+/g, "").trim(); 
   };
 
+  // Handle code changes in the editor
   const handleCodeChange = (newCode) => {
     setCode(newCode);
 
-    // Access socket from ref and emit code changes
     if (socketRef.current) {
+      // Emit the code change to the server
       socketRef.current.emit("code-change", { blockId: id, newCode });
 
-      // Compare normalized code
+      // Check if the new code matches the solution
       if (normalizeCode(newCode) === normalizeCode(solution)) {
         setShowSmiley(true);
         setElapsedTime(((Date.now() - startTime) / 1000).toFixed(2)); // Calculate elapsed time in seconds
@@ -115,7 +117,7 @@ const CodeBlockPage = () => {
         <MonacoEditor
           height="100%"
           language="javascript"
-          value={code} // Use the fetched initial code
+          value={code} 
           onChange={handleCodeChange}
           options={{
             readOnly: role === "mentor",
@@ -134,7 +136,7 @@ const CodeBlockPage = () => {
             fontSize: "100px",
             textAlign: "center",
             color: "green",
-            zIndex: 10, // Ensure it stays on top
+            zIndex: 10, 
           }}
         >
           😊
