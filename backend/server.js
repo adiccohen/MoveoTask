@@ -22,9 +22,13 @@ const codeBlocks = {};
 app.use(cors({ 
   origin: "https://moveofront.vercel.app", // Allow frontend origin
   methods: ["GET", "POST"],
-  credentials: true,
+  credentials: true, // Allow cookies/auth headers
 }));
-app.use(express.json());
+
+app.use((req, res, next) => {//test delete later
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 
 // Initialize code blocks from database
 (async () => {
@@ -106,6 +110,7 @@ io.on("connection", (socket) => {
     }
   });
 });
+
 
 // Start Server
 const PORT = process.env.PORT || 3001; // Use Railway's dynamic port or default to 3001
